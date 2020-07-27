@@ -1,15 +1,37 @@
-## Put comments here that give an overall description of what your
-## functions do
+## The functions makeCacheMatrix and so the created object has the attributes as stated above
+## moreover the object so created can change the value of the cached matrix without
+## sourcing the code all over again
 
-## Write a short comment describing this function
+## makeCacheMatrix creates and returns an object
+## which has the functions set(),get(),getinverse(),setinverse() as attributes
+
 
 makeCacheMatrix <- function(x = matrix()) {
-
+  inv <- NULL
+  set <- function(y) {
+    x <<- y
+    inv <<- NULL
+  }
+  get <- function() x
+  setinverse <- function(whatevs) inv <<- whatevs
+  getinverse <- function() inv
+  list(set = set, get = get,
+       setinverse = setinverse,
+       getinverse = getinverse)
 }
 
 
-## Write a short comment describing this function
+## this function takes an object of type makeCacheMatrix 
+## and returns the inverse of the matrix in the object
 
 cacheSolve <- function(x, ...) {
-        ## Return a matrix that is the inverse of 'x'
+  inv <- x$getinverse()
+  if(!is.null(inv)) {
+    message("cached data")
+    return(inv)
+  }
+  data <- x$get()
+  inv <- solve(data)
+  x$setinverse(inv)
+  print(inv)
 }
