@@ -1,11 +1,17 @@
 """
-Flagship reproduction of the reference short: a Fourier square-wave built from
-rotating epicycles that draws the wave downward, then "turns 3D" — the nested
-circles explode into a receding stack of harmonic layers, each carrying its own
-sine component, exactly the reference's camera beat.
+Pure-visual reproduction of the reference short — no text anywhere.
+
+Nested rotating epicycles (the odd harmonics of a square-wave Fourier series)
+spin in a flat front view while EVERY joint of the chain traces its own partial
+sum simultaneously: cyan (1 term), gold (2 terms), orange (3 terms) and the
+white full sum, each streaming downward with a dashed connector and a pen dot
+at its moving front. Then the signature beat — reveal_3d() tilts the camera,
+the colored partial traces fade away, and the circles explode into a receding
+stack of harmonic layers, each carrying its own component sine, joined by
+dashed projections and stack links; a slow orbit holds the 3D shot.
 
 Render:
-    ./render.sh fourier --fps 30
+    ./render.sh fourier --fps 60
     manim -qh mathviz/scenes/fourier_square.py FourierSquareWave
 """
 from __future__ import annotations
@@ -17,15 +23,13 @@ from manim import (
     Dot,
     Line,
     ParametricFunction,
+    ValueTracker,
     VGroup,
     FadeIn,
     FadeOut,
     Create,
-    Write,
     OUT,
     linear,
-    smooth,
-    rate_functions,
 )
 
 from mathviz import ShortsScene, style
@@ -37,11 +41,17 @@ AMPS = [4.0 / (np.pi * k) for k in KS]  # true Fourier amplitudes
 # ---- layout / scale --------------------------------------------------------- #
 SY = 0.55          # amplitude → world units (shared by circles AND wave)
 ST = 0.50          # domain (time) → downward world units
-# Assembly sits low enough that its full vertical reach clears the title band,
-# and the drawn wave ends above the formula card.
-CENTER = np.array([0.0, 1.65, 0.0])     # epicycle assembly anchor
-DOMAIN = 2.5 * np.pi                     # 1.25 periods, fills the column
+# With no title above and no card below, the action owns the whole column:
+# the assembly sits high, the traces stream well clear of the bottom edge.
+CENTER = np.array([0.0, 1.9, 0.0])      # epicycle assembly anchor
+DOMAIN = 3.0 * np.pi                     # 1.5 periods, fills the column
 DZ = 0.60          # depth between harmonic layers in the 3D reveal
+
+# ---- per-trace styling (k = number of summed harmonics) --------------------- #
+TRACE_COLORS = [style.CYAN, style.GOLD, style.ORANGE, style.WHITE]
+TRACE_WIDTHS = [2.0, 2.0, 2.0, 3.0]
+TRACE_OPACS = [0.8, 0.8, 0.8, 1.0]
+TRACE_STEP = 0.04  # coarse sampling keeps the per-frame rebuilds cheap
 
 
 def _chain(x: float):
@@ -53,14 +63,14 @@ def _chain(x: float):
     return pts
 
 
-def _value(x: float) -> float:
-    """Square-wave value (horizontal deflection) at x."""
-    return sum(a * SY * np.sin(k * x) for k, a in zip(KS, AMPS))
+def _partial_value(n: int, x: float) -> float:
+    """Partial-sum deflection using the first n harmonics."""
+    return sum(a * SY * np.sin(k * x) for k, a in zip(KS[:n], AMPS[:n]))
 
 
-def _wave_point(s: float, z: float = 0.0):
-    """A point on the drawn wave: horizontal = value, vertical = time (down)."""
-    return np.array([CENTER[0] + _value(s), CENTER[1] - s * ST, z])
+def _partial_point(n: int, s: float, z: float = 0.0):
+    """A point on partial-sum trace n: horizontal = value, vertical = time."""
+    return np.array([CENTER[0] + _partial_value(n, s), CENTER[1] - s * ST, z])
 
 
 def _harmonic_point(i: int, s: float, z: float = 0.0):
@@ -70,27 +80,21 @@ def _harmonic_point(i: int, s: float, z: float = 0.0):
 
 
 class FourierSquareWave(ShortsScene):
-    TITLE = "Fourier Series"
-    HANDLE = "@mathviz"
-    FORMULA = (
-        r"f(x)=\dfrac{4}{\pi}\sum_{n=1}^{\infty}"
-        r"\dfrac{\sin\!\big((2n-1)x\big)}{2n-1}"
-    )
-    FORMULA_SCALE = 0.6
+    TITLE = ""
+    HANDLE = ""
+    FORMULA = None
 
     def construct(self):
         self.set_front_view()
-        self.build_overlay()
 
         # ---- faint vertical "0" axis the wave is drawn against ------------- #
         axis = Line(
             np.array([0.0, CENTER[1] + 0.15, 0.0]),
-            np.array([0.0, CENTER[1] - DOMAIN * ST + 0.2, 0.0]),
+            np.array([0.0, CENTER[1] - DOMAIN * ST - 0.2, 0.0]),
             color=style.MUTE, stroke_width=1.2,
         ).set_opacity(0.5)
 
         # ---- epicycle mobjects (persistent; driven by updaters) ------------ #
-        from manim import ValueTracker
         xt = ValueTracker(0.0)
 
         circles, radii = [], []
@@ -99,7 +103,6 @@ class FourierSquareWave(ShortsScene):
             circles.append(Circle(radius=a * SY, color=col,
                                    stroke_width=2.2, stroke_opacity=0.85))
             radii.append(Line(color=col, stroke_width=2.0))
-        pen = Dot(color=style.WHITE, radius=0.04)
 
         def bind():
             for i in range(len(KS)):
@@ -110,33 +113,57 @@ class FourierSquareWave(ShortsScene):
                     m.put_start_and_end_on(p[i] + 1e-6, p[i + 1])
                 circles[i].add_updater(c_upd)
                 radii[i].add_updater(r_upd)
-            pen.add_updater(lambda m: m.move_to(_chain(xt.get_value())[-1]))
 
         bind()
 
-        # combined wave (white) + vertical connector, both live off xt
-        wave = ParametricFunction(
-            lambda s: _wave_point(s), t_range=[0, 1e-3], color=style.WHITE,
-            stroke_width=3.0,
-        )
-        wave.add_updater(lambda m: m.become(ParametricFunction(
-            _wave_point, t_range=[0, max(xt.get_value(), 1e-3)],
-            color=style.WHITE, stroke_width=3.0)))
-        connector = DashedLine(color=style.MUTE, stroke_width=1.4, dash_length=0.06)
-        connector.add_updater(lambda m: m.put_start_and_end_on(
-            _chain(xt.get_value())[-1], _wave_point(xt.get_value()) + 1e-6))
+        # ---- simultaneous partial-sum traces (the key move) ----------------- #
+        # After the n-th circle, joint n carries a pen that traces the sum of
+        # the first n harmonics. All four stream down at once: cyan, gold,
+        # orange, then the white full sum. Each gets a dashed connector from
+        # its chain joint to the moving trace front, plus a pen dot.
+        traces, connectors, pens = [], [], []
+        for n in range(1, len(KS) + 1):
+            col = TRACE_COLORS[n - 1]
+            w = TRACE_WIDTHS[n - 1]
+            op = TRACE_OPACS[n - 1]
+
+            tr = ParametricFunction(
+                lambda s, n=n: _partial_point(n, s),
+                t_range=[0, 1e-3, TRACE_STEP], color=col, stroke_width=w,
+            ).set_fill(opacity=0).set_stroke(opacity=op)
+            tr.add_updater(lambda m, n=n, col=col, w=w, op=op: m.become(
+                ParametricFunction(
+                    lambda s: _partial_point(n, s),
+                    t_range=[0, max(xt.get_value(), 1e-3), TRACE_STEP],
+                    color=col, stroke_width=w,
+                ).set_fill(opacity=0).set_stroke(opacity=op)))
+            traces.append(tr)
+
+            conn = DashedLine(color=style.MUTE, stroke_width=1.2,
+                              dash_length=0.06, stroke_opacity=0.5)
+            conn.add_updater(lambda m, n=n: m.put_start_and_end_on(
+                _chain(xt.get_value())[n],
+                _partial_point(n, xt.get_value()) + 1e-6))
+            connectors.append(conn)
+
+            p = Dot(color=col, radius=0.035)
+            p.add_updater(lambda m, n=n: m.move_to(
+                _partial_point(n, xt.get_value())))
+            pens.append(p)
 
         # ---- Phase 1: assemble + spin + draw (flat front view) ------------- #
         self.play(FadeIn(axis), Create(VGroup(*circles)), run_time=1.0)
-        self.add(*radii, pen, wave, connector)
-        self.play(xt.animate.set_value(DOMAIN), run_time=6.0, rate_func=linear)
+        self.add(*radii, *traces, *connectors, *pens)
+        self.play(xt.animate.set_value(DOMAIN), run_time=7.0, rate_func=linear)
 
         # freeze the machinery so we can explode it into depth
-        for m in (*circles, *radii, pen, wave, connector):
+        for m in (*circles, *radii, *traces, *connectors, *pens):
             m.clear_updaters()
 
         # ---- Phase 2: the reveal — explode into a 3D harmonic stack -------- #
-        explode = []
+        # The colored partial traces (and every connector/pen) fade out; only
+        # the white full sum stays behind at z=0 while the circles recede.
+        explode = [FadeOut(VGroup(*traces[:-1], *connectors, *pens))]
         comp_waves, proj_lines, stack_links = [], [], []
         prev_center = None
         for i in range(len(KS)):
