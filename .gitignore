@@ -1,4 +1,21 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
+# Python / venv
+.venv/
+__pycache__/
+*.pyc
+
+# Manim render artifacts (heavy — never commit rendered media)
+media/
+out/
+*.mp4
+*.mov
+*.mkv
+*.gif
+*.png
+*.wav
+!docs/**/*.png
+
+# Manim caches
+.manim_cache/
+
+# OS
+.DS_Store

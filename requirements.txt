@@ -1,0 +1,6 @@
+# Interesting Math Series / Equations Visuals — Python deps
+# Rendering engine
+manim==0.20.1
+# Numerics used by scene builders
+numpy>=1.26
+scipy>=1.11

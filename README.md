@@ -1,105 +1,71 @@
-### Introduction
+# Interesting Math Series / Equations Visuals
 
-This second programming assignment will require you to write an R
-function that is able to cache potentially time-consuming computations.
-For example, taking the mean of a numeric vector is typically a fast
-operation. However, for a very long vector, it may take too long to
-compute the mean, especially if it has to be computed repeatedly (e.g.
-in a loop). If the contents of a vector are not changing, it may make
-sense to cache the value of the mean so that when we need it again, it
-can be looked up in the cache rather than recomputed. In this
-Programming Assignment you will take advantage of the scoping rules of
-the R language and how they can be manipulated to preserve state inside
-of an R object.
+Turn a mathematical equation into a polished **vertical short** — 1080×1920, 24 / 30 / 60 fps,
+H.264 (yuv420p, faststart), directly uploadable to **Instagram Reels** and **YouTube Shorts**.
 
-### Example: Caching the Mean of a Vector
+Every video follows one signature grammar: a clean **flat 2D build-up** that then
+**"turns 3D"** with a camera tilt — nested pieces exploding into a receding, orbiting
+stack. Rendered with [**manim**](https://www.manim.community/) (the best-in-class engine
+for exactly this kind of 2D→3D mathematical animation).
 
-In this example we introduce the `<<-` operator which can be used to
-assign a value to an object in an environment that is different from the
-current environment. Below are two functions that are used to create a
-special object that stores a numeric vector and caches its mean.
+<p align="center"><em>Flat epicycles draw the wave → the camera tilts → the harmonics fan out into 3D.</em></p>
 
-The first function, `makeVector` creates a special "vector", which is
-really a list containing a function to
+## Quick start
 
-1.  set the value of the vector
-2.  get the value of the vector
-3.  set the value of the mean
-4.  get the value of the mean
+```bash
+./setup.sh                     # one-time: installs ffmpeg, LaTeX subset, manim (in .venv)
+./render.sh fourier --fps 30   # -> out/fourier_30fps.mp4  (1080x1920, Reels/Shorts ready)
+./render.sh taylor  --fps 60
+./render.sh fourier --preview  # fast 540x960 pass while iterating
+```
 
-<!-- -->
+`--fps` accepts `24`, `30`, or `60`. Output lands in `out/<scene>_<fps>fps.mp4`.
 
-    makeVector <- function(x = numeric()) {
-            m <- NULL
-            set <- function(y) {
-                    x <<- y
-                    m <<- NULL
-            }
-            get <- function() x
-            setmean <- function(mean) m <<- mean
-            getmean <- function() m
-            list(set = set, get = get,
-                 setmean = setmean,
-                 getmean = getmean)
-    }
+## The skill: any equation → a video
 
-The following function calculates the mean of the special "vector"
-created with the above function. However, it first checks to see if the
-mean has already been calculated. If so, it `get`s the mean from the
-cache and skips the computation. Otherwise, it calculates the mean of
-the data and sets the value of the mean in the cache via the `setmean`
-function.
+The real point of this repo is the **`math-equation-video` skill** (in
+`.claude/skills/`). In Claude Code, **upload a photo of an equation** and ask to
+visualize it — Claude reads the equation, classifies it, picks or composes a scene
+template, renders it in the house style, self-verifies the frames, and hands back the MP4.
 
-    cachemean <- function(x, ...) {
-            m <- x$getmean()
-            if(!is.null(m)) {
-                    message("getting cached data")
-                    return(m)
-            }
-            data <- x$get()
-            m <- mean(data, ...)
-            x$setmean(m)
-            m
-    }
+It knows how to map, e.g.:
 
-### Assignment: Caching the Inverse of a Matrix
+- a **Fourier series** → rotating epicycles drawing the wave, exploding into a harmonic stack
+- a **Taylor / power series** → partial sums converging, then each term on its own depth layer
+- **parametric / complex paths**, **single functions** (tangent/area), **surfaces** `z=f(x,y)`, …
 
-Matrix inversion is usually a costly computation and there may be some
-benefit to caching the inverse of a matrix rather than computing it
-repeatedly (there are also alternatives to matrix inversion that we will
-not discuss here). Your assignment is to write a pair of functions that
-cache the inverse of a matrix.
+See `.claude/skills/math-equation-video/SKILL.md` and its `references/`.
 
-Write the following functions:
+## What's in here
 
-1.  `makeCacheMatrix`: This function creates a special "matrix" object
-    that can cache its inverse.
-2.  `cacheSolve`: This function computes the inverse of the special
-    "matrix" returned by `makeCacheMatrix` above. If the inverse has
-    already been calculated (and the matrix has not changed), then
-    `cacheSolve` should retrieve the inverse from the cache.
+```
+mathviz/                  reusable engine
+  style.py                palette, serif type, bordered formula card
+  base.py                 ShortsScene: 9:16 framing + the 2D→3D camera move
+  scenes/
+    fourier_square.py     FourierSquareWave  — square-wave epicycles → 3D harmonic stack
+    taylor_sine.py        TaylorSine         — sin x convergence → 3D term explosion
+render.sh                 render a scene to a phone-ready MP4 (fps / preview / normalize)
+setup.sh                  bootstrap the toolchain on a fresh box
+manim.cfg                 vertical 1080x1920 defaults
+.claude/skills/math-equation-video/   the skill (workflow, references, scaffolder, frame tool)
+```
 
-Computing the inverse of a square matrix can be done with the `solve`
-function in R. For example, if `X` is a square invertible matrix, then
-`solve(X)` returns its inverse.
+## Add your own scene
 
-For this assignment, assume that the matrix supplied is always
-invertible.
+```bash
+python .claude/skills/math-equation-video/scripts/new_scene.py my_series --from taylor_sine
+# edit mathviz/scenes/my_series.py (math + TITLE + FORMULA), add it to render.sh's SCENES map
+./render.sh my_series --preview
+```
 
-In order to complete this assignment, you must do the following:
+Every scene subclasses `ShortsScene`, so you get the vertical framing, the title/handle/
+formula overlay, and `set_front_view() → reveal_3d() → orbit()` for free. Keep the
+flat-then-tilt grammar — it's the channel's signature.
 
-1.  Fork the GitHub repository containing the stub R files at
-    [https://github.com/rdpeng/ProgrammingAssignment2](https://github.com/rdpeng/ProgrammingAssignment2)
-    to create a copy under your own account.
-2.  Clone your forked GitHub repository to your computer so that you can
-    edit the files locally on your own machine.
-3.  Edit the R file contained in the git repository and place your
-    solution in that file (please do not rename the file).
-4.  Commit your completed R file into YOUR git repository and push your
-    git branch to the GitHub repository under your account.
-5.  Submit to Coursera the URL to your GitHub repository that contains
-    the completed R code for the assignment.
+## Notes
 
-### Grading
-
-This assignment will be graded via peer assessment.
+- Rendered videos (`out/`, `media/`) are **git-ignored** — the repo tracks the code that
+  generates them, not the heavy files.
+- Formula cards use LaTeX (`MathTex`); `setup.sh` installs the needed texlive subset.
+- Requirements: Python 3.11+, ffmpeg, a LaTeX distribution. `setup.sh` handles all three on Ubuntu.
