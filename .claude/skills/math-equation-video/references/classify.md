@@ -1,7 +1,9 @@
 # Classifying an equation → a visualization
 
 Read the transcribed LaTeX and match it to a *visual idea* + the standard camera
-grammar (build flat, then tilt to 3D). Pick the first row that fits.
+grammar (build flat — all components simultaneously — then tilt to 3D). Pick the
+first row that fits. Rows 1 and 2 have dedicated installed skills
+(`fourier-epicycles-short`, `taylor-series-short`) — route to those directly.
 
 ## Decision guide
 
@@ -22,8 +24,8 @@ periodic target (square/saw/triangle wave, or any `f` on `[-π,π]`).
   `eˣ: xⁿ/n!` · `cos x: (-1)ⁿx^{2n}/(2n)!` · `ln(1+x): (-1)^{n+1}xⁿ/n` · `1/(1-x): xⁿ`.
 
 **3. Convergent numeric / geometric series** — `Σ arⁿ`, `Σ 1/n²`, etc. → a number.
-- Visual: partial-sum **staircase or bar tower** climbing toward the limit line;
-  annotate the limit (e.g. `π²/6`).
+- Visual: partial-sum **staircase or bar tower** climbing toward a faint limit line
+  (a line, not a label — house style is zero text).
 - 3D beat: lay successive partial sums into depth so the approach to the limit is a
   receding ramp. Adapt `taylor_sine.py` (treat each partial sum as a "layer").
 

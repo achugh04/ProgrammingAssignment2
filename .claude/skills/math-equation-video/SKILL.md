@@ -1,123 +1,63 @@
 ---
 name: math-equation-video
 description: >-
-  Turn a mathematical equation into a polished vertical short (1080x1920, 24/30/60fps,
-  Instagram Reels / YouTube Shorts ready) in the house "series-visual" style: a flat
-  2D build-up that then "turns 3D" with a camera tilt. Use this whenever the user
-  uploads or names an equation/series/function and wants it animated or visualized as
-  a video — e.g. "visualize this equation", "make a reel of this Fourier series",
-  "animate this Taylor expansion", "turn this formula into a short". Built on manim.
+  Turn any mathematical equation into a vertical short (1080x1920, 24/30/60fps,
+  Instagram Reels / YouTube Shorts ready) in the house style: a flat 2D build-up where
+  every component of the series/equation animates SIMULTANEOUSLY, then the camera tilts
+  and it "turns 3D". Pure visual — no text overlays. Use when the user uploads or names
+  an equation/series/function and wants it animated — "visualize this equation", "make
+  a reel of this formula", "animate this series". Routes to fourier-epicycles-short or
+  taylor-series-short when they match; composes a new manim scene otherwise.
 ---
 
-# Math Equation → Vertical Video
+# Math Equation → Vertical Video (umbrella)
 
-You are turning a math equation (often an uploaded photo/screenshot) into a short,
-rendered with **manim** in this repo's house style: a **flat 2D build-up** that
-**tilts into 3D** — the signature "…watch till the end, this turns 3D" beat.
+You are turning a math equation (often an uploaded photo) into a rendered short.
+Two ready-made visuals are installed as their **own skills** — route to them first:
 
-Work the pipeline below **in order**. The self-verify step (5) is mandatory — it is
-how visual bugs (clipped titles, off-screen curves, filled-in strokes) get caught.
+| If the equation is… | Use |
+|---|---|
+| Fourier-type series `Σ aₙ sin/cos(nx)` (square/saw/triangle wave, epicycles) | **`fourier-epicycles-short`** |
+| Taylor / Maclaurin / power series `Σ cₙxⁿ` approximating a function | **`taylor-series-short`** |
+| Anything else | continue below and compose a new scene |
 
-## 0. Orient in the repo
+## House style (applies to every video)
 
-Everything lives at the repo root:
+- **Pure visual: zero text.** No title, no creator handle, no formula card, no labels.
+  (`ShortsScene` still has an overlay system — leave it off unless explicitly asked.)
+- **Everything animates simultaneously.** All series components / partial sums /
+  traces build at the same time, not one after another — that's the signature.
+- **Flat 2D build → `reveal_3d()` tilt → orbit hold.** Author in the xy-plane, offset
+  components along +z so they nest when flat and fan into a receding stack after the tilt.
+- Output: **1080×1920, H.264 yuv420p +faststart**, `--fps 24|30|60`.
 
-- `mathviz/` — the reusable engine. `style.py` (palette/type/formula-card),
-  `base.py` (`ShortsScene`: vertical framing, title/handle/formula overlay, and the
-  `set_front_view()` → `reveal_3d()` camera move).
-- `mathviz/scenes/` — one file per video. **Copy the closest one as your starting point.**
-- `render.sh` — renders a scene to a phone-ready MP4. `setup.sh` — installs the toolchain.
-- Read `references/templates.md`, `references/classify.md`, `references/style-and-camera.md`,
-  and `references/manim-gotchas.md` in this skill folder before writing a scene.
+## Pipeline for a new equation
 
-## 1. Ensure the toolchain
-
-Manim + ffmpeg + a LaTeX subset are required. If `./render.sh` fails with a missing
-`manim`/`latex`/`ffmpeg`, run once (takes a few minutes on a fresh container):
-
-```bash
-./setup.sh
-```
-
-Then every command runs inside the venv (`render.sh` activates it automatically).
-
-## 2. Read the equation
-
-If the user uploaded an image, **open it** and transcribe the math to LaTeX exactly.
-State back, in one line, what it is (e.g. "square-wave Fourier series", "Maclaurin
-series of eˣ", "logistic map", "a parametric rose r=cos(kθ)"). If the equation is
-ambiguous or you can't read a symbol, ask **one** concise clarifying question — don't guess.
-
-## 3. Classify → pick a template
-
-Use `references/classify.md` to map the equation to a visualization + camera pattern,
-and `references/templates.md` for what already exists. Rule of thumb:
-
-| Equation shape | Template to copy | Visual |
-|---|---|---|
-| Series that reconstructs a periodic function `Σ aₙ sin/cos(nx)` | `fourier_square.py` | rotating epicycles draw the wave → explode into a 3D harmonic stack |
-| Power/Taylor/Maclaurin series `Σ cₙ xⁿ` approximating `f` | `taylor_sine.py` | partial sums converge on `f` → explode terms onto depth layers |
-| Geometric / numeric series converging to a value | `taylor_sine.py` (adapt) | partial-sum curve/bars approach the limit → 3D term stack |
-| Parametric / complex `z(t)`, orbits, roses | `fourier_square.py` (adapt the chain) | traced path → tilt to reveal it as a 3D curve |
-| Single `f(x)`, derivative, integral/area | `taylor_sine.py` (adapt) | graph + tangent/area build → tilt for depth |
-| Surface `z=f(x,y)` | new `ThreeDScene` on `ShortsScene` | `Surface` + `reveal_3d` + orbit |
-
-If nothing fits, **compose a new scene** on `ShortsScene` — keep the grammar:
-front view → build in 2D → `reveal_3d(added_anims=[…explode…])` → `orbit()` + hold.
-
-## 4. Author the scene
-
-```bash
-python .claude/skills/math-equation-video/scripts/new_scene.py <name> --from <template>
-# e.g. new_scene.py cosine_fourier --from fourier_square
-```
-
-This copies a template to `mathviz/scenes/<name>.py` with a fresh class name, and
-prints the `render.sh` registry line to add. Then edit:
-
-- The **math functions** (the `_term`/`_chain`/`_value`/plotted `f`) to match the equation.
-- `TITLE`, `FORMULA` (raw LaTeX for the bottom card), `HANDLE`.
-- Domain/scale constants so the drawing fills the column without clipping.
-- The **explode** step so each component lands on its own `+z` depth layer.
-
-Never hard-code colors — use `mathviz.style` (`harmonic_color(i)`, `CYAN`, `GOLD`, …).
-Add your scene to the `SCENES` map in `render.sh`.
-
-## 5. Preview & self-verify  (MANDATORY loop)
-
-```bash
-./render.sh <name> --preview                          # fast 540x960 pass
-.claude/skills/math-equation-video/scripts/frames.sh out/<name>_preview.mp4
-```
-
-`frames.sh` drops inspection JPEGs in a temp dir; **open several** (an early 2D frame,
-the moment of the tilt, and a late 3D frame). Check, and fix in `mathviz/scenes/<name>.py`:
-
-- Title fully on-screen (not clipped left/right).
-- Every curve/label inside the frame; nothing collides with the title or formula card.
-- Strokes are **lines, not filled blobs** (see manim-gotchas: use
-  `.set_fill(opacity=0).set_stroke(...)`, never `set_opacity` on a `ParametricFunction`).
-- The 2D→3D tilt reads clearly and the held 3D shot is legible.
-
-Re-preview until it looks right. **Do not render final or deliver an unverified video.**
-
-## 6. Final render
-
-```bash
-./render.sh <name> --fps 30      # or --fps 24 / --fps 60 per the user's ask
-```
-
-Output: `out/<name>_<fps>fps.mp4` — **1080×1920, H.264 yuv420p, +faststart**, directly
-uploadable to Reels/Shorts. If the user wants multiple frame rates, render each.
-
-## 7. Deliver
-
-Send the file with `SendUserFile` (status `proactive`, `display: "render"`) and one line
-on what it shows. Rendered MP4s live under `out/`/`media/` which are git-ignored — commit
-only the **scene code**, never the heavy video, unless the user asks otherwise.
+1. **Toolchain**: if `./render.sh` fails on missing manim/latex/ffmpeg → `./setup.sh` once.
+2. **Read the equation**: open the uploaded image, transcribe to LaTeX exactly, state
+   in one line what it is. Ask one concise question if a symbol is ambiguous — don't guess.
+3. **Classify**: `references/classify.md` maps equation shapes (parametric paths,
+   single functions/calculus, surfaces, numeric series…) to visual ideas.
+4. **Author**: scaffold from the closest template —
+   `python .claude/skills/math-equation-video/scripts/new_scene.py <name> --from <fourier_square|taylor_sine>`
+   Edit the math functions and layout constants; register the scene in `render.sh`'s
+   `SCENES` map. Never hard-code colors — use `mathviz.style.harmonic_color(i)` etc.
+   Read `references/templates.md`, `references/style-and-camera.md`, and
+   `references/manim-gotchas.md` before writing scene code.
+5. **Verify (mandatory loop)**:
+   ```bash
+   ./render.sh <name> --preview
+   bash .claude/skills/math-equation-video/scripts/frames.sh out/<name>_preview.mp4
+   ```
+   Read several frames (early 2D, the tilt, late 3D) and check: zero text; components
+   animating simultaneously; nothing clipped in either phase; strokes not filled blobs.
+   Iterate until clean — never deliver unverified video.
+6. **Final render**: `./render.sh <name> --fps 30` (or 24/60 per the ask).
+7. **Deliver**: `SendUserFile` the MP4 (`display: "render"`). Rendered videos are
+   git-ignored — commit only scene code.
 
 ## Guardrails
 
-- Keep the 2D→3D camera grammar — it is the channel's signature (`references/style-and-camera.md`).
-- One equation → one focused scene. Don't cram unrelated ideas into a single short.
-- Prefer adapting an existing template to writing from scratch; they encode the fixes already.
+- One equation → one focused scene.
+- Keep the 2D→3D grammar and the simultaneity; they are the channel's signature.
+- Prefer adapting an existing template — they encode fixes already learned.

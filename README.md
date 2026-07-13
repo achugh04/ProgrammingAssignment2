@@ -1,71 +1,71 @@
 # Interesting Math Series / Equations Visuals
 
-Turn a mathematical equation into a polished **vertical short** — 1080×1920, 24 / 30 / 60 fps,
-H.264 (yuv420p, faststart), directly uploadable to **Instagram Reels** and **YouTube Shorts**.
+Turn a mathematical equation into a **pure-visual vertical short** — 1080×1920,
+24 / 30 / 60 fps, H.264 (yuv420p, faststart), directly uploadable to **Instagram
+Reels** and **YouTube Shorts**. No titles, no watermarks, no text — just the math.
 
-Every video follows one signature grammar: a clean **flat 2D build-up** that then
-**"turns 3D"** with a camera tilt — nested pieces exploding into a receding, orbiting
-stack. Rendered with [**manim**](https://www.manim.community/) (the best-in-class engine
-for exactly this kind of 2D→3D mathematical animation).
+Every video follows one signature grammar:
 
-<p align="center"><em>Flat epicycles draw the wave → the camera tilts → the harmonics fan out into 3D.</em></p>
+1. a **flat 2D build-up** in which *every* component of the equation animates
+   **simultaneously** (all partial sums trace at once), then
+2. the camera tilts and it **"turns 3D"** — the components explode into a receding,
+   orbiting stack.
+
+Rendered with [**manim**](https://www.manim.community/), the best-in-class engine for
+this kind of 2D→3D mathematical animation.
 
 ## Quick start
 
 ```bash
 ./setup.sh                     # one-time: installs ffmpeg, LaTeX subset, manim (in .venv)
-./render.sh fourier --fps 30   # -> out/fourier_30fps.mp4  (1080x1920, Reels/Shorts ready)
-./render.sh taylor  --fps 60
+./render.sh fourier --fps 60   # -> out/fourier_60fps.mp4  (1080x1920, Reels/Shorts ready)
+./render.sh taylor  --fps 30
 ./render.sh fourier --preview  # fast 540x960 pass while iterating
 ```
 
 `--fps` accepts `24`, `30`, or `60`. Output lands in `out/<scene>_<fps>fps.mp4`.
 
-## The skill: any equation → a video
+## The skills
 
-The real point of this repo is the **`math-equation-video` skill** (in
-`.claude/skills/`). In Claude Code, **upload a photo of an equation** and ask to
-visualize it — Claude reads the equation, classifies it, picks or composes a scene
-template, renders it in the house style, self-verifies the frames, and hands back the MP4.
+Three skills are installed in `.claude/skills/` (available automatically in Claude
+Code sessions on this repo):
 
-It knows how to map, e.g.:
-
-- a **Fourier series** → rotating epicycles drawing the wave, exploding into a harmonic stack
-- a **Taylor / power series** → partial sums converging, then each term on its own depth layer
-- **parametric / complex paths**, **single functions** (tangent/area), **surfaces** `z=f(x,y)`, …
-
-See `.claude/skills/math-equation-video/SKILL.md` and its `references/`.
+| Skill | What it renders |
+|---|---|
+| **`fourier-epicycles-short`** | Rotating epicycles trace *all* partial sums of a Fourier series simultaneously, then explode into a 3D harmonic stack. Adaptable to square/saw/triangle or any sum of sines. |
+| **`taylor-series-short`** | All Taylor/Maclaurin partial sums draw at once, converging on the target function, then each term explodes onto its own depth layer. Adaptable to eˣ, cos, ln(1+x), … |
+| **`math-equation-video`** | The umbrella: **upload a photo of any equation** and ask to visualize it — it classifies the math, routes to one of the skills above or composes a new scene, renders, self-verifies frame-by-frame, and returns the MP4. |
 
 ## What's in here
 
 ```
 mathviz/                  reusable engine
-  style.py                palette, serif type, bordered formula card
+  style.py                palette + (optional, off-by-default) text/formula overlays
   base.py                 ShortsScene: 9:16 framing + the 2D→3D camera move
   scenes/
-    fourier_square.py     FourierSquareWave  — square-wave epicycles → 3D harmonic stack
-    taylor_sine.py        TaylorSine         — sin x convergence → 3D term explosion
+    fourier_square.py     FourierSquareWave  — simultaneous partial-sum epicycles → 3D stack
+    taylor_sine.py        TaylorSine         — simultaneous convergence → 3D term explosion
 render.sh                 render a scene to a phone-ready MP4 (fps / preview / normalize)
 setup.sh                  bootstrap the toolchain on a fresh box
 manim.cfg                 vertical 1080x1920 defaults
-.claude/skills/math-equation-video/   the skill (workflow, references, scaffolder, frame tool)
+.claude/skills/           fourier-epicycles-short · taylor-series-short · math-equation-video
 ```
 
 ## Add your own scene
 
 ```bash
-python .claude/skills/math-equation-video/scripts/new_scene.py my_series --from taylor_sine
-# edit mathviz/scenes/my_series.py (math + TITLE + FORMULA), add it to render.sh's SCENES map
+python .claude/skills/math-equation-video/scripts/new_scene.py my_series --from fourier_square
+# edit mathviz/scenes/my_series.py (the math), add it to render.sh's SCENES map
 ./render.sh my_series --preview
 ```
 
-Every scene subclasses `ShortsScene`, so you get the vertical framing, the title/handle/
-formula overlay, and `set_front_view() → reveal_3d() → orbit()` for free. Keep the
-flat-then-tilt grammar — it's the channel's signature.
+Every scene subclasses `ShortsScene`: vertical framing and
+`set_front_view() → reveal_3d() → orbit()` come free. House rules: **zero text**,
+**all components animate simultaneously**, flat-first then the 3D reveal.
 
 ## Notes
 
-- Rendered videos (`out/`, `media/`) are **git-ignored** — the repo tracks the code that
-  generates them, not the heavy files.
-- Formula cards use LaTeX (`MathTex`); `setup.sh` installs the needed texlive subset.
-- Requirements: Python 3.11+, ffmpeg, a LaTeX distribution. `setup.sh` handles all three on Ubuntu.
+- Rendered videos (`out/`, `media/`) are **git-ignored** — the repo tracks the code
+  that generates them, not the heavy files.
+- Requirements: Python 3.11+, ffmpeg, LaTeX (only needed if you turn the optional
+  formula overlay back on). `setup.sh` handles everything on Ubuntu.
