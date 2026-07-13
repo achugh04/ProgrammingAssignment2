@@ -69,9 +69,13 @@ echo "==> rendering $CLASS @ ${RES//,/x} ${FPS}fps"
 manim render -r "$RES" --fps "$FPS" --format mp4 -o "$RAW_NAME" \
   --media_dir ./media "$FILE" "$CLASS"
 
-# manim writes to media/videos/<file-stem>/<HxW?>/<name>.mp4
-RAW=$(find media/videos -name "${RAW_NAME}.mp4" -newermt "-10 min" | head -1)
-[ -n "$RAW" ] || { echo "!! could not locate rendered file"; exit 1; }
+# manim writes to media/videos/<file-stem>/<height>p<fps>/<name>.mp4 — compute
+# that exact path so we never pick up a stale preview render of the same scene.
+STEM="$(basename "$FILE" .py)"
+HEIGHT="${RES##*,}"
+RAW="media/videos/${STEM}/${HEIGHT}p${FPS}/${RAW_NAME}.mp4"
+[ -f "$RAW" ] || RAW=$(find media/videos -path "*${HEIGHT}p${FPS}*/${RAW_NAME}.mp4" | head -1)
+[ -f "$RAW" ] || { echo "!! could not locate rendered file at $RAW"; exit 1; }
 
 mkdir -p out
 FINAL="out/${STAMP}_${TAG}.mp4"

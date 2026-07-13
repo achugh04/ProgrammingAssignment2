@@ -35,10 +35,12 @@ KS = [1, 3, 5, 7]                       # odd harmonics
 AMPS = [4.0 / (np.pi * k) for k in KS]  # true Fourier amplitudes
 
 # ---- layout / scale --------------------------------------------------------- #
-SY = 0.60          # amplitude → world units (shared by circles AND wave)
+SY = 0.55          # amplitude → world units (shared by circles AND wave)
 ST = 0.50          # domain (time) → downward world units
-CENTER = np.array([0.0, 2.35, 0.0])     # epicycle assembly anchor
-DOMAIN = 3.0 * np.pi                     # 1.5 periods, fills the column
+# Assembly sits low enough that its full vertical reach clears the title band,
+# and the drawn wave ends above the formula card.
+CENTER = np.array([0.0, 1.65, 0.0])     # epicycle assembly anchor
+DOMAIN = 2.5 * np.pi                     # 1.25 periods, fills the column
 DZ = 0.60          # depth between harmonic layers in the 3D reveal
 
 
@@ -80,10 +82,10 @@ class FourierSquareWave(ShortsScene):
         self.set_front_view()
         self.build_overlay()
 
-        # ---- faint time axis (the "0" line the wave is drawn against) ------ #
+        # ---- faint vertical "0" axis the wave is drawn against ------------- #
         axis = Line(
-            CENTER + np.array([0, 0.15, 0]),
-            _wave_point(DOMAIN) + np.array([0, -0.15, 0]),
+            np.array([0.0, CENTER[1] + 0.15, 0.0]),
+            np.array([0.0, CENTER[1] - DOMAIN * ST + 0.2, 0.0]),
             color=style.MUTE, stroke_width=1.2,
         ).set_opacity(0.5)
 
