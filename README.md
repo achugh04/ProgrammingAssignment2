@@ -4,12 +4,16 @@ Turn a mathematical equation into a **pure-visual vertical short** — 1080×192
 24 / 30 / 60 fps, H.264 (yuv420p, faststart), directly uploadable to **Instagram
 Reels** and **YouTube Shorts**. No titles, no watermarks, no text — just the math.
 
-Every video follows one signature grammar:
+Every video follows one signature grammar — and it's **3D-native**: every component
+is authored at its true depth from the first frame, viewed through an orthographic
+camera.
 
-1. a **flat 2D build-up** in which *every* component of the equation animates
-   **simultaneously** (all partial sums trace at once), then
-2. the camera tilts and it **"turns 3D"** — the components explode into a receding,
-   orbiting stack.
+1. Head-on, depth is invisible: the opening reads as a **flat 2D build-up** in which
+   *every* component of the equation animates **simultaneously** (all partial sums
+   trace at once). Then
+2. a **pure camera tilt** reveals the dimension that was always there — the
+   components were a receding, orbiting stack all along, and the animation keeps
+   drawing straight through the reveal. Nothing shifts, nothing fades, nothing is staged.
 
 Rendered with [**manim**](https://www.manim.community/), the best-in-class engine for
 this kind of 2D→3D mathematical animation.
@@ -59,9 +63,10 @@ python .claude/skills/math-equation-video/scripts/new_scene.py my_series --from 
 ./render.sh my_series --preview
 ```
 
-Every scene subclasses `ShortsScene`: vertical framing and
+Every scene subclasses `ShortsScene`: vertical framing, the orthographic camera and
 `set_front_view() → reveal_3d() → orbit()` come free. House rules: **zero text**,
-**all components animate simultaneously**, flat-first then the 3D reveal.
+**all components animate simultaneously**, **author everything at its true depth
+from frame one** — the reveal is a camera move, never a rearrangement.
 
 ## Notes
 

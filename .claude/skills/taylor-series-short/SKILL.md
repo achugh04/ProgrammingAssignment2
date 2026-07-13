@@ -2,19 +2,23 @@
 name: taylor-series-short
 description: >-
   Render the Taylor/Maclaurin convergence visual as a vertical short (1080x1920,
-  24/30/60fps, Reels/Shorts-ready): all polynomial partial sums draw simultaneously,
-  hugging the target function, then the camera tilts 3D and each term explodes onto
-  its own depth layer. Pure visual — no text overlays. Use when the user wants a
-  Taylor / Maclaurin / power-series approximation video (sin, cos, e^x, ln(1+x), …),
-  or names this skill.
+  24/30/60fps, Reels/Shorts-ready): every polynomial partial sum lives on its own
+  depth layer from frame one (crudest deepest, best hugging the target up front) and
+  they all draw simultaneously; the flat front view reads as classic 2D convergence,
+  then a camera-only tilt reveals the staircase of approximations. Pure visual — no
+  text overlays. Use when the user wants a Taylor / Maclaurin / power-series
+  approximation video (sin, cos, e^x, ln(1+x), …), or names this skill.
 ---
 
 # Taylor Series Short
 
-Renders `TaylorSine` (or a variant) from `mathviz/scenes/taylor_sine.py`: the target
-function sits faint in the background; **all partial sums draw simultaneously** in
-the house colors, converging onto it; then the signature tilt — each term `cₙxⁿ`
-explodes onto its own `+z` layer; orbit hold. **No text anywhere.**
+Renders `TaylorSine` (or a variant) from `mathviz/scenes/taylor_sine.py`. **3D-native:**
+partial sum m is authored at its own depth from the first frame — depth encodes
+approximation order (degree-1 line deepest, the best approximation white on the front
+layer, hugging the faint true curve). All of them **draw simultaneously**; the
+orthographic front view collapses the stack into the classic flat convergence
+picture, and the reveal is a **pure camera move** that exposes the depth staircase,
+held with a slow orbit. **No text anywhere.**
 
 ## Render as-is (sin x)
 

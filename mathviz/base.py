@@ -39,8 +39,13 @@ class ShortsScene(ThreeDScene):
     FORMULA_WIDTH: float = 3.9
 
     # ---- canonical camera orientations ------------------------------------ #
-    FRONT = dict(phi=0 * DEGREES, theta=-90 * DEGREES)      # flat, reads as 2D
-    REVEAL = dict(phi=64 * DEGREES, theta=-105 * DEGREES)   # the 3D tilt
+    # focal_distance is huge => effectively orthographic projection. Scenes are
+    # authored 3D-native (components at their true z from frame one); with an
+    # orthographic camera, depth has exactly zero footprint in the front view,
+    # so the flat phase reads as perfect 2D and the tilt reveals the stack
+    # purely through rotation.
+    FRONT = dict(phi=0 * DEGREES, theta=-90 * DEGREES, focal_distance=1000)
+    REVEAL = dict(phi=64 * DEGREES, theta=-105 * DEGREES, focal_distance=1000)
 
     # --------------------------------------------------------------------- #
     # Overlay: title + handle + formula card, all fixed in the camera frame #

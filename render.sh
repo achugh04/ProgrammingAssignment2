@@ -90,4 +90,4 @@ echo "==> done: $FINAL"
 ffprobe -v error -select_streams v:0 \
   -show_entries stream=width,height,r_frame_rate,pix_fmt \
   -of default=noprint_wrappers=1 "$FINAL" 2>/dev/null | sed 's/^/    /' || true
-[ "$OPENIT" -eq 1 ] && echo "$FINAL"
+if [ "$OPENIT" -eq 1 ]; then echo "$FINAL"; fi

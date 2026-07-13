@@ -2,20 +2,24 @@
 name: fourier-epicycles-short
 description: >-
   Render the Fourier epicycles visual as a vertical short (1080x1920, 24/30/60fps,
-  Reels/Shorts-ready): nested rotating circles simultaneously trace every partial sum
-  of a Fourier series in a flat 2D view, then the camera tilts 3D and the harmonics
-  explode into a receding orbiting stack. Pure visual — no text overlays. Use when the
-  user wants a Fourier-series / epicycle / harmonic-circles video (square wave, sawtooth,
-  triangle, or any sum of sines), or names this skill.
+  Reels/Shorts-ready): a 3D-native epicycle machine — each harmonic circle on its own
+  depth layer — traces every partial sum simultaneously; the flat front view reads as
+  classic 2D, then a camera-only tilt reveals the receding harmonic stack while the
+  machine keeps drawing. Pure visual — no text overlays. Use when the user wants a
+  Fourier-series / epicycle / harmonic-circles video (square wave, sawtooth, triangle,
+  or any sum of sines), or names this skill.
 ---
 
 # Fourier Epicycles Short
 
-Renders `FourierSquareWave` (or a variant) from `mathviz/scenes/fourier_square.py`:
-epicycles rotate; **every chain joint traces its own partial sum simultaneously**
-(cyan → gold → orange → white full sum, each with a dashed connector); then the
-signature tilt — circles explode into a 3D harmonic stack with per-layer component
-sines; orbit hold. **No text anywhere** — no title, handle, or formula card.
+Renders `FourierSquareWave` (or a variant) from `mathviz/scenes/fourier_square.py`.
+The machine is **authored in 3D from the first frame**: harmonic circle i lives on its
+own z-plane, each tip drops one layer to the next circle's center, and every joint
+traces its partial sum on its own layer (cyan → gold → orange; the white full sum on
+the front layer). The orthographic front view collapses this to the classic 2D
+picture; the reveal is a **pure camera move** — the tilt exposes the depth that was
+always there, and the machine keeps spinning and drawing through the tilt and the
+closing orbit. **No text anywhere.**
 
 ## Render as-is (square wave)
 

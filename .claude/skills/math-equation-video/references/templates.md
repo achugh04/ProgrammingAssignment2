@@ -2,8 +2,10 @@
 
 Each scene subclasses `mathviz.ShortsScene`. To make a new video, **copy the closest
 template** (via `scripts/new_scene.py`) and edit the math + layout. All share the
-grammar: `set_front_view()` → build in 2D **with every component animating
-simultaneously** → `reveal_3d(added_anims=[…])` → `orbit()` + `wait()`. No text overlays.
+grammar: **author every component at its true z from frame one** (3D-native; the
+orthographic front view collapses depth) → `set_front_view()` → flat build with
+**every component animating simultaneously** → camera-only reveal (`reveal_3d()` /
+`move_camera`, animation keeps running through it) → `orbit()` + finish. No text overlays.
 
 The two shipped templates are also installed as standalone skills:
 **`fourier-epicycles-short`** and **`taylor-series-short`** — route to those skills
@@ -11,20 +13,23 @@ directly when the equation matches; use this catalog when composing something ne
 
 ## `fourier_square.py` → `FourierSquareWave`   (skill: fourier-epicycles-short)
 Square-wave Fourier series `f(x)=(4/π)Σ sin((2n-1)x)/(2n-1)`.
-- **Signature motion:** every joint k of the epicycle chain traces its own k-term
-  partial sum simultaneously (cyan/gold/orange, white for the full sum), each with a
-  dashed connector from joint to trace front; then circles explode onto +z layers
-  with per-layer component sines.
+- **3D-native machine:** circle i lives on plane `Z[i]` (fundamental on top); each
+  tip drops one `DZ` straight down in z to the next circle's center (invisible
+  head-on, the vertical dashed links once tilted). Joint n traces its n-term partial
+  sum on its own layer (cyan/gold/orange; white full sum on the front layer z=0),
+  all simultaneously, each with an in-plane dashed connector and pen dot. The reveal
+  is `move_camera(**REVEAL, added_anims=[xt…])` — the machine draws through it.
 - **Knobs:** `KS` (harmonic list), `AMPS` (coefficients), `SY` (amplitude scale),
-  `ST` (time→downward scale), `DOMAIN` (periods drawn), `CENTER` (assembly anchor),
-  `DZ` (depth between exploded layers).
+  `ST` (time→downward scale), `DOMAIN` (periods drawn), `CENTER` (machine anchor),
+  `DZ` (layer spacing, sets `Z`).
 - **Reuse for:** any `Σ aₙ sin/cos(nx)` — change `KS`/`AMPS`. Sawtooth: all n,
   `2/(πn)·(-1)^{n+1}`. Triangle: odd n, `8/(π²n²)` alternating.
 
 ## `taylor_sine.py` → `TaylorSine`   (skill: taylor-series-short)
 Maclaurin series of `sin x`.
-- **Signature motion:** all partial-sum curves draw at the same time, converging on
-  the faint target; then each term `cₙxⁿ` explodes onto its own +z layer.
+- **3D-native staircase:** partial sum m is authored at depth `Z[m]` from frame one —
+  crudest deepest, best (white) hugging the faint true curve on the front layer. All
+  draw simultaneously in one shared play; the reveal is a pure camera move.
 - **Knobs:** `N_TERMS`, `_term(n,x)` (the summand), `SX`/`SY` (scale), `ORG` (origin),
   `DZ` (layer depth), per-partial `span` (domain clipping so low orders stay on-screen).
 - **Reuse for:** any power/Taylor series or single-function build — change `_term`,

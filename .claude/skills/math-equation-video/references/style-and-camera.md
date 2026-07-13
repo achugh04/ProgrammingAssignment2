@@ -29,30 +29,39 @@ off-brand. Drive shared motion from one `ValueTracker` with per-component update
 - Hand successive components colors via `style.harmonic_color(i)`. Never hard-code hex.
 
 ## The camera move — the whole point
-Two orientations live on `ShortsScene`:
-- `FRONT = phi=0°, theta=-90°` — looking straight at the xy-plane. Reads as flat 2D.
+Two orientations live on `ShortsScene` (both with a huge `focal_distance`, i.e. an
+**orthographic** projection — this is essential):
+- `FRONT = phi=0°, theta=-90°` — looking straight down z at the xy-planes. Reads as flat 2D.
 - `REVEAL = phi=64°, theta=-105°` — tilted up and rotated; the world gains depth.
 
-**Depth convention:** author everything in the xy-plane (what FRONT shows). To make a
-component "explode into 3D", offset it along **+z**. In FRONT a +z offset is invisible
-(things overlap / nest); after the tilt it becomes a **receding vertical stack** — the
-"…this turns 3D" reveal. Nested epicycles → a stack of tilted ellipses; overlaid
-partial sums → layered curves in depth.
+**Author 3D-native.** Every component is BUILT at its true z from the first frame —
+each harmonic circle on its own z-plane, each trace on its layer, chain links dropping
+through depth. Because the projection is orthographic, depth has *exactly zero
+footprint* in the front view: the flat phase collapses to the perfect classic 2D
+picture. The reveal is then a **pure camera move** — no shifting, no fading, nothing
+staged — the tilt just *sees the dimension that was always there*, and the animation
+(the machine, the drawing) keeps running straight through the tilt and the orbit.
 
 **Execution:**
 ```python
 self.set_front_view()          # in construct(), before animating
-# … build & animate the whole thing FLAT, all components simultaneously …
-self.reveal_3d(added_anims=[   # tilt WHILE components separate in +z
-    group_i.animate.shift(OUT * z_i) for i, ...
-], run_time=2.7)
-self.play(*[Create(component_i) ...])   # per-layer detail streams in
-self.orbit(rate=0.05); self.wait(3); self.stop_orbit()
+# … build everything AT ITS TRUE z; animate all components simultaneously …
+self.play(xt.animate(rate_func=linear).set_value(0.55 * DOMAIN), run_time=5.5)
+self.move_camera(**self.REVEAL,                       # camera-only reveal;
+    added_anims=[xt.animate(rate_func=linear)         # the machine keeps
+                 .set_value(0.75 * DOMAIN)],          # drawing through it
+    run_time=2.8)
+self.orbit(rate=0.05)
+self.play(xt.animate(rate_func=linear).set_value(DOMAIN), run_time=3.2)
+self.stop_orbit()
 ```
+Never `shift(OUT*z)` components during the reveal and never fade traces at the tilt —
+that's the staged version this house style explicitly replaced.
 
 ## Do / don't
 - **Do** keep one clean flat build before the tilt — the contrast sells the reveal.
-- **Do** keep the exploded stack compact (`DZ ≈ 0.55–0.65`) so the top layer stays
-  in-frame through the whole orbit.
-- **Don't** start already-3D unless it's a surface. Flat-first, then reveal.
+- **Do** keep the depth stack compact (`DZ ≈ 0.55–0.65`) so the top layer stays
+  in-frame through the whole orbit — check both phases with frames.
+- **Do** let the animation keep running through the tilt — a frozen reveal is dead.
+- **Don't** open with the tilted camera unless it's a surface. Flat-first, then reveal.
 - **Don't** add any text. Don't animate sequentially. Don't let anything clip.
